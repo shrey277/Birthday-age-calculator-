@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Birthday age calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#F7EFE3;
+    --ink-soft:#C9B9CE;
+    --ink-faint:#9C8AA6;
+    --plum-900:#180F1C;
+    --plum-800:#241729;
+    --plum-700:#2F1E38;
+    --plum-600:#3C2846;
+    --gold:#E8B85C;
+    --gold-soft:#F3D391;
+    --rose:#E8879A;
+    --rose-soft:#F2B2BF;
+    --border-soft:rgba(232,184,92,0.16);
+    --shadow-color:rgba(10,4,14,0.5);
+    --font-display:'Fraunces', Georgia, serif;
+    --font-body:'Plus Jakarta Sans', -apple-system, sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:3rem 1.25rem;
+    background:linear-gradient(180deg, #2b1a33 0%, #1c1220 62%, #160e19 100%);
+    font-family:var(--font-body);
+    color:var(--ink);
+    overflow-x:hidden;
+    position:relative;
+  }
+  .bg-orb{
+    position:absolute;
+    border-radius:50%;
+    filter:blur(70px);
+    opacity:0.22;
+    pointer-events:none;
+    z-index:0;
+  }
+  .orb-1{
+    width:320px; height:320px;
+    background:var(--gold);
+    top:-80px; left:-100px;
+    animation:drift1 22s ease-in-out infinite alternate;
+  }
+  .orb-2{
+    width:280px; height:280px;
+    background:var(--rose);
+    bottom:-90px; right:-90px;
+    animation:drift2 26s ease-in-out infinite alternate;
+  }
+  @keyframes drift1{ 0%{ transform:translate(0,0);} 100%{ transform:translate(40px,30px);} }
+  @keyframes drift2{ 0%{ transform:translate(0,0);} 100%{ transform:translate(-30px,-40px);} }
+
+  .wrap{ position:relative; z-index:1; width:100%; max-width:460px; }
+
+  .eyebrow{
+    font-size:0.72rem;
+    font-weight:600;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--gold-soft);
+    margin:0 0 0.75rem;
+    text-align:center;
+  }
+  .headline{
+    font-family:var(--font-display);
+    font-weight:500;
+    font-size:clamp(1.9rem, 5vw + 0.6rem, 2.6rem);
+    line-height:1.15;
+    text-align:center;
+    margin:0 0 0.75rem;
+    color:var(--ink);
+  }
+  .headline em{
+    font-style:italic;
+    font-weight:400;
+    color:var(--gold);
+  }
+  .subcopy{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:0.95rem;
+    line-height:1.6;
+    max-width:32ch;
+    margin:0 auto 2rem;
+  }
+
+  .card{
+    background:var(--plum-700);
+    border:1px solid var(--border-soft);
+    border-radius:28px;
+    padding:2.1rem 1.9rem;
+    box-shadow:0 24px 60px -14px var(--shadow-color), inset 0 1px 0 rgba(255,255,255,0.04);
+    transition:opacity 0.35s ease, transform 0.35s ease;
+  }
+  .card.collapsed{
+    opacity:0;
+    transform:translateY(-10px) scale(0.98);
+    pointer-events:none;
+  }
+
+  .field-label{
+    display:block;
+    font-size:0.78rem;
+    font-weight:600;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin-bottom:0.6rem;
+  }
+  .date-input{
+    width:100%;
+    background:var(--plum-600);
+    border:1px solid var(--border-soft);
+    border-radius:14px;
+    padding:0.85rem 1rem;
+    font-family:var(--font-body);
+    font-size:1rem;
+    color:var(--ink);
+    outline:none;
+    transition:border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .date-input::-webkit-calendar-picker-indicator{
+    filter:invert(0.85) brightness(1.3) sepia(0.4) saturate(1.5) hue-rotate(320deg);
+    cursor:pointer;
+  }
+  .date-input:focus,
+  .date-input:focus-visible{
+    border-color:var(--gold);
+    box-shadow:0 0 0 4px rgba(232,184,92,0.16);
+  }
+  .date-input.shake{ animation:shake 0.4s ease; }
+  @keyframes shake{
+    0%,100%{ transform:translateX(0); }
+    25%{ transform:translateX(-6px); }
+    75%{ transform:translateX(6px); }
+  }
+
+  .error-msg{
+    min-height:1.1rem;
+    font-size:0.82rem;
+    color:var(--rose-soft);
+    margin:0.55rem 0 0;
+    opacity:0;
+    transition:opacity 0.25s ease;
+  }
+  .error-msg.visible{ opacity:1; }
+
+  .calc-btn{
+    width:100%;
+    margin-top:1.2rem;
+    padding:1rem 1.5rem;
+    border:none;
+    border-radius:999px;
+    background:linear-gradient(135deg, var(--gold), var(--rose));
+    color:#2A1810;
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:0.98rem;
+    cursor:pointer;
+    box-shadow:0 10px 26px -6px rgba(232,184,92,0.35);
+    transition:transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .calc-btn:hover{ transform:translateY(-2px); box-shadow:0 14px 30px -6px rgba(232,184,92,0.45); }
+  .calc-btn:active{ transform:scale(0.97); }
+  .calc-btn:focus-visible{ outline:2px solid var(--gold-soft); outline-offset:3px; }
+
+  .result-card{
+    opacity:0;
+    transform:translateY(14px);
+    display:none;
+  }
+  .result-card.visible{
+    display:block;
+    opacity:1;
+    transform:translateY(0);
+    transition:opacity 0.5s cubic-bezier(.16,1,.3,1), transform 0.5s cubic-bezier(.16,1,.3,1);
+  }
+
+  .reveal{
+    opacity:0;
+    transform:translateY(10px);
+    transition:opacity 0.5s ease, transform 0.5s ease;
+  }
+  .result-card.visible .reveal{ opacity:1; transform:translateY(0); }
+  .reveal-1{ transition-delay:0.05s; }
+  .reveal-2{ transition-delay:0.18s; }
+  .reveal-3{ transition-delay:0.28s; }
+  .reveal-4{ transition-delay:0.36s; }
+  .reveal-5{ transition-delay:0.42s; }
+
+  .ring-wrap{
+    position:relative;
+    width:min(210px, 60vw);
+    aspect-ratio:1/1;
+    margin:0.25rem auto 1.6rem;
+  }
+  .ring{ width:100%; height:100%; transform:rotate(-90deg); }
+  .ring-track{ fill:none; stroke:var(--plum-600); stroke-width:12; }
+  .ring-progress{
+    fill:none;
+    stroke:url(#ringGrad);
+    stroke-width:12;
+    stroke-linecap:round;
+  }
+  .flame{
+    position:absolute;
+    top:-15px;
+    left:50%;
+    transform:translateX(-50%);
+    width:26px;
+    height:34px;
+    animation:flicker 3s ease-in-out infinite;
+  }
+  .flame.lit-today{ filter:drop-shadow(0 0 10px rgba(232,184,92,0.65)); }
+  @keyframes flicker{
+    0%,100%{ transform:translateX(-50%) scale(1) rotate(0deg); }
+    50%{ transform:translateX(-50%) scale(1.06) rotate(-2deg); }
+  }
+  .ring-center{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  .ring-number{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:clamp(2rem, 8vw, 2.6rem);
+    line-height:1;
+    color:var(--ink);
+  }
+  .ring-label{
+    font-size:0.72rem;
+    font-weight:600;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin-top:0.4rem;
+  }
+
+  .stats-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:1.1rem 0.25rem;
+    border-top:1px solid var(--border-soft);
+    border-bottom:1px solid var(--border-soft);
+    margin-bottom:1.3rem;
+  }
+  .stat{ flex:1; text-align:center; }
+  .stat-num{
+    display:block;
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:1.7rem;
+    color:var(--ink);
+  }
+  .stat-label{
+    display:block;
+    font-size:0.68rem;
+    font-weight:600;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin-top:0.3rem;
+  }
+  .stat-divider{ width:1px; height:32px; background:var(--border-soft); }
+
+  .next-bday-tag{
+    display:flex;
+    align-items:center;
+    gap:0.85rem;
+    background:rgba(232,135,154,0.1);
+    border:1px solid rgba(232,135,154,0.22);
+    border-radius:16px;
+    padding:0.9rem 1.05rem;
+    margin-bottom:1.1rem;
+  }
+  .cal-icon{ flex-shrink:0; color:var(--rose-soft); }
+  .tag-label{
+    display:block;
+    font-size:0.68rem;
+    font-weight:600;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--rose-soft);
+  }
+  .tag-date{
+    display:block;
+    font-family:var(--font-display);
+    font-weight:500;
+    font-size:1.02rem;
+    color:var(--ink);
+    margin-top:0.15rem;
+  }
+
+  .footer-note{
+    text-align:center;
+    font-size:0.82rem;
+    color:var(--ink-faint);
+    margin:0 0 1.3rem;
+  }
+
+  .reset-link{
+    display:block;
+    margin:0 auto;
+    background:none;
+    border:none;
+    color:var(--gold-soft);
+    font-family:var(--font-body);
+    font-size:0.86rem;
+    font-weight:500;
+    text-decoration:underline;
+    text-underline-offset:3px;
+    cursor:pointer;
+  }
+  .reset-link:hover{ color:var(--gold); }
+  .reset-link:focus-visible{ outline:2px solid var(--gold-soft); outline-offset:3px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .bg-orb, .flame{ animation:none; }
+    .card, .result-card, .reveal, .ring-progress, .calc-btn{ transition:none !important; }
+  }
+
+  @media (max-width:400px){
+    .card{ padding:1.6rem 1.35rem; border-radius:22px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="bg-orb orb-1" aria-hidden="true"></div>
+  <div class="bg-orb orb-2" aria-hidden="true"></div>
+
+  <main class="wrap">
+    <p class="eyebrow">Age, exactly</p>
+    <h1 class="headline">How old are you,<br><em>exactly?</em></h1>
+    <p class="subcopy">Enter your date of birth to see your exact age and the countdown to your next birthday.</p>
+
+    <section class="card" id="inputCard">
+      <label class="field-label" for="dob">Date of birth</label>
+      <input type="date" id="dob" class="date-input" aria-describedby="errorMsg">
+      <p class="error-msg" id="errorMsg" role="alert"></p>
+      <button type="button" class="calc-btn" id="calcBtn">Calculate my age</button>
+    </section>
+
+    <section class="card result-card" id="resultCard" aria-live="polite">
+      <div class="ring-wrap reveal reveal-1">
+        <svg class="ring" viewBox="0 0 220 220">
+          <defs>
+            <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#E8B85C"/>
+              <stop offset="100%" stop-color="#E8879A"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-track" cx="110" cy="110" r="90"/>
+          <circle class="ring-progress" id="ringProgress" cx="110" cy="110" r="90"/>
+        </svg>
+        <svg class="flame" id="flameIcon" viewBox="0 0 26 34" aria-hidden="true">
+          <defs>
+            <linearGradient id="flameGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#F3D391"/>
+              <stop offset="100%" stop-color="#E8879A"/>
+            </linearGradient>
+          </defs>
+          <rect x="11.5" y="24" width="3" height="9" rx="1.5" fill="#8A6A45"/>
+          <path d="M13 2C13 2 6 11 6 18C6 23 9 27 13 27C17 27 20 23 20 18C20 11 13 2 13 2Z" fill="url(#flameGrad)"/>
+        </svg>
+        <div class="ring-center">
+          <span class="ring-number" id="daysToGo">0</span>
+          <span class="ring-label" id="ringLabel">days to go</span>
+        </div>
+      </div>
+
+      <div class="stats-row reveal reveal-2">
+        <div class="stat">
+          <span class="stat-num" id="statYears">0</span>
+          <span class="stat-label">Years</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num" id="statMonths">0</span>
+          <span class="stat-label">Months</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num" id="statDays">0</span>
+          <span class="stat-label">Days</span>
+        </div>
+      </div>
+
+      <div class="next-bday-tag reveal reveal-3">
+        <svg class="cal-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="16" rx="3"/>
+          <path d="M3 10h18M8 3v4M16 3v4"/>
+        </svg>
+        <div>
+          <span class="tag-label">Next birthday</span>
+          <span class="tag-date" id="nextBdayDate">—</span>
+        </div>
+      </div>
+
+      <p class="footer-note reveal reveal-4" id="daysLivedNote"></p>
+
+      <button type="button" class="reset-link reveal reveal-5" id="resetBtn">Enter a different date</button>
+    </section>
+  </main>
+
+<script>
+  const dobInput = document.getElementById('dob');
+  const calcBtn = document.getElementById('calcBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  const inputCard = document.getElementById('inputCard');
+  const resultCard = document.getElementById('resultCard');
+  const resetBtn = document.getElementById('resetBtn');
+  const ringProgress = document.getElementById('ringProgress');
+  const daysToGoEl = document.getElementById('daysToGo');
+  const ringLabelEl = document.getElementById('ringLabel');
+  const statYears = document.getElementById('statYears');
+  const statMonths = document.getElementById('statMonths');
+  const statDays = document.getElementById('statDays');
+  const nextBdayDateEl = document.getElementById('nextBdayDate');
+  const daysLivedNote = document.getElementById('daysLivedNote');
+  const flameIcon = document.getElementById('flameIcon');
+
+  const R = 90;
+  const CIRC = 2 * Math.PI * R;
+  ringProgress.style.strokeDasharray = CIRC;
+  ringProgress.style.strokeDashoffset = CIRC;
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  dobInput.setAttribute('max', todayStr);
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function stripTime(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+
+  function calcAge(birth, today){
+    let y = today.getFullYear() - birth.getFullYear();
+    let m = today.getMonth() - birth.getMonth();
+    let d = today.getDate() - birth.getDate();
+    if (d < 0) {
+      m--;
+      const prevMonthLastDay = new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+      d += prevMonthLastDay;
+    }
+    if (m < 0) { y--; m += 12; }
+    return { years: y, months: m, days: d };
+  }
+
+  function getNextBirthday(birth, today){
+    let next = new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
+    if (next < today) {
+      next = new Date(today.getFullYear() + 1, birth.getMonth(), birth.getDate());
+    }
+    return next;
+  }
+
+  function formatDate(d){
+    return d.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  }
+
+  function animateValue(el, start, end, duration){
+    if (prefersReducedMotion || duration <= 0) {
+      el.textContent = end.toLocaleString();
+      return;
+    }
+    const startTime = performance.now();
+    function step(now){
+      const p = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const value = Math.round(start + (end - start) * eased);
+      el.textContent = value.toLocaleString();
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function showError(msg){
+    errorMsg.textContent = msg;
+    errorMsg.classList.add('visible');
+    dobInput.classList.add('shake');
+    setTimeout(() => dobInput.classList.remove('shake'), 400);
+  }
+
+  function clearError(){
+    errorMsg.textContent = '';
+    errorMsg.classList.remove('visible');
+  }
+
+  function runCalculation(){
+    clearError();
+    const val = dobInput.value;
+    if (!val) {
+      showError('Enter your date of birth to continue.');
+      return;
+    }
+    const [yy, mm, dd] = val.split('-').map(Number);
+    const birth = new Date(yy, mm - 1, dd);
+    const today = stripTime(new Date());
+
+    if (birth > today) {
+      showError('Choose a date before today.');
+      return;
+    }
+
+    const age = calcAge(birth, today);
+    const nextBday = getNextBirthday(birth, today);
+    const isToday = nextBday.getTime() === today.getTime();
+    const daysToGo = Math.round((nextBday - today) / 86400000);
+
+    let lastBday = isToday
+      ? new Date(today.getFullYear(), birth.getMonth(), birth.getDate())
+      : new Date(nextBday.getFullYear() - 1, birth.getMonth(), birth.getDate());
+    const cycleTotal = Math.max((nextBday - lastBday) / 86400000, 1);
+    const elapsed = (today - lastBday) / 86400000;
+    const progress = isToday ? 1 : Math.min(Math.max(elapsed / cycleTotal, 0), 1);
+
+    const daysLived = Math.round((today - birth) / 86400000);
+
+    inputCard.classList.add('collapsed');
+    setTimeout(() => {
+      inputCard.style.display = 'none';
+      resultCard.style.display = 'block';
+      requestAnimationFrame(() => requestAnimationFrame(() => resultCard.classList.add('visible')));
+    }, prefersReducedMotion ? 0 : 350);
+
+    const targetOffset = CIRC * (1 - progress);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        ringProgress.style.transition = prefersReducedMotion ? 'none' : 'stroke-dashoffset 1s cubic-bezier(.16,1,.3,1)';
+        ringProgress.style.strokeDashoffset = targetOffset;
+      });
+    });
+
+    if (isToday) {
+      ringLabelEl.textContent = "today's the day";
+      flameIcon.classList.add('lit-today');
+    } else {
+      ringLabelEl.textContent = 'days to go';
+      flameIcon.classList.remove('lit-today');
+    }
+
+    animateValue(daysToGoEl, 0, daysToGo, 900);
+    animateValue(statYears, 0, age.years, 700);
+    animateValue(statMonths, 0, age.months, 700);
+    animateValue(statDays, 0, age.days, 700);
+
+    nextBdayDateEl.textContent = formatDate(nextBday);
+    daysLivedNote.textContent = `You've lived ${daysLived.toLocaleString()} days so far.`;
+  }
+
+  calcBtn.addEventListener('click', runCalculation);
+  dobInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') runCalculation(); });
+
+  resetBtn.addEventListener('click', () => {
+    resultCard.classList.remove('visible');
+    setTimeout(() => {
+      resultCard.style.display = 'none';
+      inputCard.style.display = 'block';
+      requestAnimationFrame(() => inputCard.classList.remove('collapsed'));
+      dobInput.value = '';
+      ringProgress.style.transition = 'none';
+      ringProgress.style.strokeDashoffset = CIRC;
+      dobInput.focus();
+    }, prefersReducedMotion ? 0 : 300);
+  });
+</script>
+</body>
+</html>
